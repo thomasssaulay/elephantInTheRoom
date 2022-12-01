@@ -1,0 +1,109 @@
+[gd_scene load_steps=7 format=2]
+
+[ext_resource path="res://assets/hud/titleScreen.png" type="Texture" id=2]
+[ext_resource path="res://scenes/MainMenu.gd" type="Script" id=3]
+[ext_resource path="res://assets/fonts/PearSodaLarge.tres" type="DynamicFont" id=4]
+[ext_resource path="res://assets/hud/credits.png" type="Texture" id=5]
+
+[sub_resource type="Shader" id=1]
+code = "shader_type canvas_item;
+
+
+uniform float red_displacement : hint_range(-1.0,1.0) = 0.0;
+uniform float green_displacement : hint_range(-1.0,1.0) = 0.0;
+uniform float blue_displacement : hint_range(-1.0,1.0) = 0.0;
+uniform float ghost : hint_range(0.0, 1.0) = 0.0;
+uniform float intensity : hint_range(0.0,1.0) = 0.0;
+uniform float scan_effect : hint_range(0.0,1.0) = 0.0;
+uniform float distortion_effect : hint_range(0.0,1.0) = 0.0;
+uniform float negative_effect : hint_range(0.0,1.0) = 0.0;
+
+
+void fragment()
+{
+	vec4 baseTexture = texture(TEXTURE, UV);
+	vec4 color1 = texture(TEXTURE, UV+vec2(sin(TIME*0.2*intensity), tan(UV.y)));
+	COLOR = (1.0-scan_effect)*baseTexture*0.75 + scan_effect*color1;
+	
+	vec4 color2 = texture(TEXTURE, UV+vec2(fract(TIME*0.01*intensity), cos(fract(TIME*intensity)*10.0)));
+	COLOR = COLOR + ((1.0-distortion_effect)*baseTexture*0.75 + distortion_effect*color2);
+	
+	vec4 color3 = texture(TEXTURE, UV + vec2(fract(TIME*0.1*intensity), tan(TIME*0.02*intensity) ));
+	COLOR = COLOR - ((1.0-negative_effect)*baseTexture*0.5 + negative_effect*color3);
+	
+	COLOR.r = (1.0-red_displacement)*baseTexture.r + red_displacement*texture(TEXTURE, UV-vec2(sin(TIME*0.1*intensity) + 0.2, 0.1)).r;
+	COLOR.g = (1.0-green_displacement)*baseTexture.g +  green_displacement*texture(TEXTURE, UV+vec2(- 0.2, sin(TIME*0.1*intensity))).g;
+	COLOR.b = (1.0-blue_displacement)*baseTexture.b + blue_displacement*texture(TEXTURE, UV+vec2(sin(TIME*0.1*intensity) + 0.2, 0.1)).b;
+	COLOR = COLOR + texture(TEXTURE, UV + UV*ghost)*ghost;
+}"
+
+[sub_resource type="ShaderMaterial" id=2]
+shader = SubResource( 1 )
+shader_param/red_displacement = 0.0
+shader_param/green_displacement = 0.0
+shader_param/blue_displacement = 0.0
+shader_param/ghost = 0.0
+shader_param/intensity = 0.0
+shader_param/scan_effect = 0.696
+shader_param/distortion_effect = 0.588
+shader_param/negative_effect = 0.0
+
+[node name="MainMenu" type="Control"]
+script = ExtResource( 3 )
+
+[node name="TextureRect" type="TextureRect" parent="."]
+material = SubResource( 2 )
+margin_top = -80.0
+margin_right = 1280.0
+margin_bottom = 850.0
+texture = ExtResource( 2 )
+expand = true
+stretch_mode = 6
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_right = 1280.0
+margin_bottom = 800.0
+alignment = 1
+
+[node name="StartButton" type="MenuButton" parent="VBoxContainer"]
+margin_top = 363.0
+margin_right = 1280.0
+margin_bottom = 398.0
+custom_fonts/font = ExtResource( 4 )
+action_mode = 1
+text = "NEW GAME"
+
+[node name="CreditButton" type="MenuButton" parent="VBoxContainer"]
+margin_top = 402.0
+margin_right = 1280.0
+margin_bottom = 437.0
+focus_mode = 2
+custom_fonts/font = ExtResource( 4 )
+toggle_mode = false
+action_mode = 1
+text = "CREDITS"
+
+[node name="Popup" type="Popup" parent="."]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+margin_right = 1280.0
+margin_bottom = 800.0
+
+[node name="TextureRect" type="TextureRect" parent="Popup"]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+margin_left = -126.5
+margin_top = -158.5
+margin_right = 126.5
+margin_bottom = 158.5
+texture = ExtResource( 5 )
+
+[connection signal="pressed" from="VBoxContainer/StartButton" to="." method="_on_MenuButton_pressed"]
+[connection signal="pressed" from="VBoxContainer/CreditButton" to="." method="_on_CreditButton_pressed"]
+[connection signal="gui_input" from="Popup" to="." method="_on_Popup_gui_input"]
